@@ -569,6 +569,23 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:11px 2
 let currentRole = 'client';
 let currentUser = {name:'', phone:'', role:'client', sub:''};
 let activeDashSection = '';
+let firebaseReady = false;
+let firebaseModules = null;
+let firebaseDb = null;
+let firebaseAuth = null;
+let roleDataUnsubscribe = null;
+let liveDashboardData = {};
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBe3w1XGc8LBzNd7WfEwsKQ1NZ6mOd0duw",
+  authDomain:        "mjengoai-e4a9f.firebaseapp.com",
+  projectId:         "mjengoai-e4a9f",
+  storageBucket:     "mjengoai-e4a9f.firebasestorage.app",
+  messagingSenderId: "467178823272",
+  appId:             "1:467178823272:web:fe71bb1609783a539965dd"
+};
+
+const firebaseIsConfigured = FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.includes('YOUR_');
 
 const ROLES = {
   client:{
@@ -646,6 +663,112 @@ const ROLES = {
       {id:'profile',ic:'👤',label:'Profile'},
     ]
   }
+};
+
+/* ══════════════════════════════════════
+   FIREBASE + LIVE DATA
+══════════════════════════════════════ */
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function safeDocId(value){
+  return String(value || 'guest').replace(/[^\w-]/g,'_').slice(0,120);
+}
+
+function firebaseStatus(text, ok=false){
+  console.log(`[MjengoAI Firebase] ${text}`);
+  const nav = document.getElementById('nav-right');
+  if(nav && currentUser.name){
+    nav.dataset.firebase = ok ? 'connected' : 'offline';
+  }
+}
+
+async function initFirebase(){
+  if(firebaseReady) return true;
+  if(!firebaseIsConfigured){
+    firebaseStatus('Missing config. Using local demo data.');
+    return false;
+  }
+  try{
+    const [appMod, firestoreMod, authMod] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js')
+    ]);
+    const app = appMod.getApps().length ? appMod.getApp() : appMod.initializeApp(FIREBASE_CONFIG);
+    firebaseDb = firestoreMod.getFirestore(app);
+    firebaseAuth = authMod.getAuth(app);
+    firebaseModules = {...firestoreMod, ...authMod};
+    firebaseReady = true;
+    firebaseStatus('Connected.', true);
+    return true;
+  }catch(err){
+    firebaseStatus(`Could not connect: ${err.message}`);
+    return false;
+  }
+}
+
+function getLiveRoleData(role=currentUser.role){
+  return liveDashboardData[role] || {};
+}
+
+function dataList(key, fallback){
+  const value = getLiveRoleData()[key];
+  return Array.isArray(value) && value.length ? value : fallback;
+}
+
+function dataValue(key, fallback){
+  const value = getLiveRoleData()[key];
+  return value === undefined || value === null || value === '' ? fallback : value;
+}
+
+async function saveUserProfile(){
+  const userPayload = {
+    ...currentUser,
+    updatedAt: new Date().toISOString()
+  };
+  localStorage.setItem('mjengoaiUser', JSON.stringify(userPayload));
+  if(!firebaseReady || !firebaseDb) return;
+  const {doc,setDoc,serverTimestamp} = firebaseModules;
+  await setDoc(doc(firebaseDb,'users',safeDocId(currentUser.phone || currentUser.name)),{
+    ...currentUser,
+    updatedAt: serverTimestamp()
+  },{merge:true});
+}
+
+async function subscribeDashboardData(role){
+  if(roleDataUnsubscribe) roleDataUnsubscribe();
+  if(!firebaseReady || !firebaseDb) return;
+  const {doc,onSnapshot} = firebaseModules;
+  roleDataUnsubscribe = onSnapshot(doc(firebaseDb,'dashboardRoles',role), snap=>{
+    liveDashboardData[role] = snap.exists() ? snap.data() : {};
+    if(currentUser.role === role && document.getElementById('page-dash').classList.contains('active')){
+      const keepSection = activeDashSection || 'overview';
+      buildDashContent();
+      showDashSection(keepSection, document.getElementById('sbi-'+keepSection));
+    }
+  }, err=>firebaseStatus(`Realtime listener failed: ${err.message}`));
+}
+
+window.seedMjengoDemoData = async function(){
+  const ok = await initFirebase();
+  if(!ok) return console.warn('Add Firebase config before seeding.');
+  const {doc,setDoc,serverTimestamp} = firebaseModules;
+  const seed = {
+    client:{
+      stats:[{v:'3',l:'Active Projects',c:'up',ch:'+1 this month'},{v:'KES 2.4M',l:'Total Budget',c:'nt',ch:'tracked'},{v:'12',l:'Artisans Contacted',c:'up',ch:'+4 this week'},{v:'240 MJT',l:'Wallet Balance',c:'nt',ch:'= KES 24,000'}],
+      activity:[{av:'🏠',avC:'#3a8c3a',name:'Plan MH-R-3021 downloaded',sub:'3BR Bungalow · KES 15,000',time:'2h ago'}],
+      projects:[{n:'3BR Bungalow — Ruiru',s:'Foundation Phase',p:45,bud:'KES 3.8M'},{n:'Perimeter Wall — Thika plot',s:'Completed',p:100,bud:'KES 280K'}]
+    },
+    professional:{
+      stats:[{v:'8',l:'Active Projects',c:'up',ch:'+2 this month'},{v:'KES 4.8M',l:'Revenue YTD',c:'up',ch:'+12%'},{v:'94%',l:'Client Rating',c:'up',ch:'4.7★ avg'},{v:'1,240 MJT',l:'Wallet Balance',c:'nt',ch:'= KES 124,000'}],
+      activity:[{av:'SK',avC:'#4a7ec0',name:'New project request',sub:'Client: Amina Hassan — 4BR Villa, Karen',time:'1h ago'}],
+      projects:[{n:'Amina Hassan — 4BR Villa Karen',s:'Design Phase',p:35,c:'#4a7ec0'}]
+    }
+  };
+  await Promise.all(Object.entries(seed).map(([role,data])=>setDoc(doc(firebaseDb,'dashboardRoles',role),{...data,updatedAt:serverTimestamp()},{merge:true})));
+  console.log('MjengoAI demo Firestore data seeded.');
 };
 
 /* ══════════════════════════════════════
@@ -729,36 +852,162 @@ function switchAuthTab(el, mode){
   }
 }
 
-function socialLogin(provider){
-  const R = ROLES[currentRole];
-  const names = {google:'Mate Njiru', facebook:'John Kamau', tiktok:'Grace Achieng'};
-  currentUser = {name: names[provider], phone:'+254712345678', role: currentRole, sub: currentUser.sub||''};
-  launchDashboard();
+async function socialLogin(provider){
+  try {
+    await initFirebase();
+    const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+    let credential;
+
+    if(provider === 'google'){
+      const prov = new authMod.GoogleAuthProvider();
+      prov.addScope('email');
+      prov.addScope('profile');
+      const result = await authMod.signInWithPopup(firebaseAuth, prov);
+      const user = result.user;
+      currentUser = {
+        name:  user.displayName || user.email || 'Google User',
+        phone: user.phoneNumber || '',
+        email: user.email || '',
+        photo: user.photoURL || '',
+        uid:   user.uid,
+        role:  currentRole,
+        sub:   currentUser.sub || ''
+      };
+    } else {
+      /* Facebook / TikTok — show coming soon message */
+      const err = document.getElementById('err-msg');
+      err.style.display = 'flex';
+      document.getElementById('err-text').textContent =
+        provider.charAt(0).toUpperCase()+provider.slice(1)+' login coming soon. Use Google or phone number.';
+      return;
+    }
+
+    await saveUserProfile();
+    launchDashboard();
+
+  } catch(e) {
+    if(e.code === 'auth/popup-closed-by-user') return;
+    const err = document.getElementById('err-msg');
+    err.style.display = 'flex';
+    document.getElementById('err-text').textContent = 'Login failed: ' + e.message;
+  }
 }
 
-function sendOTP(){
-  const phone = document.getElementById('f-phone').value.trim();
+/* ── Real Firebase Phone OTP ── */
+let _mjConfirmResult = null;
+
+async function sendOTP(){
+  const phone = document.getElementById('f-phone').value.trim().replace(/\s/g,'');
   const fname = document.getElementById('f-fname').value.trim();
   const lname = document.getElementById('f-lname').value.trim();
-  const err = document.getElementById('err-msg');
+  const err   = document.getElementById('err-msg');
 
-  if(!fname||!lname){err.style.display='flex';document.getElementById('err-text').textContent='Please enter your first and last name.';return;}
-  if(!phone||phone.length<9){err.style.display='flex';document.getElementById('err-text').textContent='Please enter a valid Kenyan phone number.';return;}
+  if(!fname||!lname){
+    err.style.display='flex';
+    document.getElementById('err-text').textContent='Please enter your first and last name.';
+    return;
+  }
+  if(!phone||phone.replace(/\D/g,'').length<9){
+    err.style.display='flex';
+    document.getElementById('err-text').textContent='Please enter a valid Kenyan phone number.';
+    return;
+  }
   err.style.display='none';
 
-  currentUser.name = fname+' '+lname;
-  currentUser.phone = '+254'+phone;
-  currentUser.role = currentRole;
+  const formatted = phone.startsWith('0') ? '+254'+phone.slice(1)
+                  : phone.startsWith('254') ? '+'+phone : phone;
 
-  document.getElementById('otp-phone-disp').textContent = '+254'+phone;
-  goStep(2);
+  currentUser.name  = fname+' '+lname;
+  currentUser.phone = formatted;
+  currentUser.role  = currentRole;
+
+  const btn = document.getElementById('btn-sendotp');
+  btn.disabled = true;
+  btn.textContent = 'Sending code…';
+
+  try {
+    /* Init Firebase if not yet done */
+    await initFirebase();
+
+    const authMod = await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js');
+
+    /* Create invisible reCAPTCHA only once */
+    if(!window._mjDashReCap){
+      window._mjDashReCap = new authMod.RecaptchaVerifier(
+        firebaseAuth, 'mj-dash-recaptcha', { size: 'invisible' }
+      );
+    }
+
+    _mjConfirmResult = await authMod.signInWithPhoneNumber(
+      firebaseAuth, formatted, window._mjDashReCap
+    );
+
+    document.getElementById('otp-phone-disp').textContent = formatted;
+    err.style.display = 'none';
+    goStep(2);
+
+  } catch(e) {
+    err.style.display = 'flex';
+    document.getElementById('err-text').textContent =
+      e.code === 'auth/invalid-phone-number'
+        ? 'Invalid phone number format. Use 07XXXXXXXX.'
+        : e.code === 'auth/too-many-requests'
+        ? 'Too many attempts. Please wait a few minutes.'
+        : 'Could not send code: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send WhatsApp Verification Code →';
+  }
 }
 
-function verifyOTP(){
+async function verifyOTP(){
   const code = [0,1,2,3,4,5].map(i=>document.getElementById('otp'+i).value).join('');
-  if(code.length<6){return;}
-  goStep(3);
-  setTimeout(launchDashboard, 600);
+  if(code.length < 6){ return; }
+
+  const btn = document.getElementById('btn-verifyotp');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+
+  try {
+    let user;
+    if(_mjConfirmResult){
+      /* Real Firebase OTP verify */
+      const result = await _mjConfirmResult.confirm(code);
+      user = result.user;
+      currentUser.uid   = user.uid;
+      currentUser.phone = user.phoneNumber;
+    }
+    /* Save profile to Firestore */
+    await saveUserProfile();
+    /* Save to members collection too for directory listing */
+    if(firebaseDb){
+      const {doc, setDoc, serverTimestamp} = firebaseModules;
+      await setDoc(doc(firebaseDb,'members', safeDocId(currentUser.phone)),{
+        name:        currentUser.name,
+        phone:       currentUser.phone,
+        role:        currentUser.role,
+        subCategory: currentUser.sub || '',
+        active:      false,
+        verified:    false,
+        joined:      serverTimestamp(),
+        rating:      0,
+        reviews:     0
+      },{merge:true});
+    }
+    goStep(3);
+    setTimeout(launchDashboard, 600);
+
+  } catch(e) {
+    const err = document.getElementById('err-msg');
+    err.style.display = 'flex';
+    document.getElementById('err-text').textContent =
+      e.code === 'auth/invalid-verification-code'
+        ? 'Wrong code. Please check and try again.'
+        : 'Verification failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verify & Enter Dashboard →';
+  }
 }
 
 function otpNext(el, idx){
@@ -815,6 +1064,11 @@ function launchDashboard(){
   buildDashContent();
   showDashSection('overview', document.getElementById('sbi-overview'));
   goTo('dash');
+  initFirebase().then(async ok=>{
+    if(!ok) return;
+    await saveUserProfile().catch(err=>firebaseStatus(`Profile save failed: ${err.message}`));
+    subscribeDashboardData(currentUser.role);
+  });
 }
 
 function showDashSection(id, el){
@@ -869,7 +1123,7 @@ function buildOverview(role){
     contractor:[{v:'4',l:'Active Contracts',c:'up',ch:'KES 45M total'},{v:'KES 12M',l:'Revenue YTD',c:'up',ch:'+22%'},{v:'6',l:'Tenders Applied',c:'nt',ch:'2 pending'},{v:'4,500 MJT',l:'Wallet Balance',c:'nt',ch:'= KES 450,000'}],
     materials:[{v:'156',l:'Products Listed',c:'nt',ch:'across 8 categories'},{v:'KES 3.4M',l:'Sales This Month',c:'up',ch:'+14%'},{v:'210',l:'Active Orders',c:'up',ch:'+28 today'},{v:'34,000 MJT',l:'Wallet Balance',c:'up',ch:'= KES 3.4M'}],
   };
-  const stats = statsMap[role]||statsMap.client;
+  const stats = dataList('stats', statsMap[role]||statsMap.client);
 
   const actMap = {
     client:[{av:'🏠',avC:'#3a8c3a',name:'Plan MH-R-3021 downloaded',sub:'3BR Bungalow · KES 15,000',time:'2h ago'},{av:'JK',avC:'#e8a04a',name:'Joseph Kamau accepted your request',sub:'Mason · Westlands job',time:'4h ago'},{av:'💰',avC:'#c9952a',name:'MJT payment sent',sub:'240 MJT to Tuff Foam Hardware',time:'Yesterday'}],
@@ -879,19 +1133,19 @@ function buildOverview(role){
     contractor:[{av:'📄',avC:'#c9952a',name:'New tender alert',sub:'Kiambu — Road drainage works · KES 8M',time:'1h ago'},{av:'🏗️',avC:'#4a7ec0',name:'Site progress update',sub:'Ruiru 4BR Villa — Foundation 60%',time:'4h ago'},{av:'💰',avC:'#c9952a',name:'Milestone released',sub:'4,000 MJT — Slab completion',time:'Yesterday'}],
     materials:[{av:'🛒',avC:'#3aafb8',name:'Bulk order received',sub:'200 hollow blocks · Juja delivery',time:'5min ago'},{av:'📈',avC:'#c9952a',name:'Price comparison',sub:'Your cement 3% below market avg',time:'2h ago'},{av:'⭐',avC:'#3a8c3a',name:'5★ review',sub:'From Landmark Builders',time:'Yesterday'}],
   };
-  const acts = actMap[role]||actMap.client;
+  const acts = dataList('activity', actMap[role]||actMap.client);
 
   return `<div class="dash-section" id="ds-overview">
     <div class="dh">
-      <div><div class="dhtitle">Welcome back, ${currentUser.name.split(' ')[0]} 👋</div><div class="dhsub">${ROLES[role].label} · ${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'})}</div></div>
+      <div><div class="dhtitle">Welcome back, ${escapeHtml(currentUser.name.split(' ')[0])} 👋</div><div class="dhsub">${escapeHtml(ROLES[role].label)} · ${new Date().toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long'})}</div></div>
     </div>
     <div class="stats-row">
-      ${stats.map(s=>`<div class="stat-card"><div class="stat-label">${s.l}</div><div class="stat-val">${s.v}</div><div class="stat-chg ${s.c}">${s.ch}</div></div>`).join('')}
+      ${stats.map(s=>`<div class="stat-card"><div class="stat-label">${escapeHtml(s.l)}</div><div class="stat-val">${escapeHtml(s.v)}</div><div class="stat-chg ${escapeHtml(s.c)}">${escapeHtml(s.ch)}</div></div>`).join('')}
     </div>
     <div class="grid2">
       <div class="card">
         <div class="card-hdr"><div class="card-title">Recent Activity</div><div class="card-more">View all →</div></div>
-        ${acts.map(a=>`<div class="act-item"><div class="act-av" style="background:${a.avC}22;color:${a.avC}">${a.av}</div><div class="act-body"><div class="act-name">${a.name}</div><div class="act-sub">${a.sub}</div></div><div class="act-time">${a.time}</div></div>`).join('')}
+        ${acts.map(a=>`<div class="act-item"><div class="act-av" style="background:${escapeHtml(a.avC)}22;color:${escapeHtml(a.avC)}">${escapeHtml(a.av)}</div><div class="act-body"><div class="act-name">${escapeHtml(a.name)}</div><div class="act-sub">${escapeHtml(a.sub)}</div></div><div class="act-time">${escapeHtml(a.time)}</div></div>`).join('')}
       </div>
       <div class="card">
         <div class="card-hdr"><div class="card-title">Profile Completion</div><div class="card-more">Edit →</div></div>
@@ -910,12 +1164,15 @@ function buildOverview(role){
 
 /* ─── WALLET ─── */
 function buildWallet(){
+  const transactions = dataList('transactions', [['Received','Foundation milestone - Amina Hassan','+1,200 MJT','tg','2h ago'],['Sent','Materials - BuildRight Precast','-240 MJT','tr','Yesterday'],['Received','Topup via M-Pesa','+500 MJT','tg','2 days ago'],['Sent','Service fee - MjengoAI','-6 MJT','tr','2 days ago']]);
+  const walletBalance = dataValue('walletBalance', '1,240 MJT');
+  const walletKes = dataValue('walletKes', 'KES 124,000 - NCBA Loop escrow');
   return `<div class="dash-section" id="ds-wallet">
     <div class="dh"><div><div class="dhtitle">MJT Wallet</div><div class="dhsub">Mjengo Token · 1 MJT = KES 100 · NCBA Loop backed</div></div></div>
     <div class="wallet-card">
       <div class="wc-label">Available balance</div>
-      <div class="wc-bal">1,240 MJT</div>
-      <div class="wc-kes">≈ KES 124,000 · NCBA Loop escrow</div>
+      <div class="wc-bal">${escapeHtml(walletBalance)}</div>
+      <div class="wc-kes">${escapeHtml(walletKes)}</div>
       <div class="wc-row">
         <button class="wc-btn pr">+ Top Up</button>
         <button class="wc-btn">↗ Pay Pro</button>
@@ -925,11 +1182,11 @@ function buildWallet(){
     </div>
     <div class="card">
       <div class="card-hdr"><div class="card-title">Recent Transactions</div></div>
-      ${[['Received','Foundation milestone — Amina Hassan','+1,200 MJT','tg','2h ago'],['Sent','Materials — BuildRight Precast','-240 MJT','tr','Yesterday'],['Received','Topup via M-Pesa','+500 MJT','tg','2 days ago'],['Sent','Service fee — MjengoAI','-6 MJT','tr','2 days ago']].map(([t,d,a,cl,tm])=>`
+      ${transactions.map(([t,d,a,cl,tm])=>`
         <div class="act-item">
           <div class="act-av" style="background:${cl==='tg'?'rgba(126,200,126,.12)':'rgba(217,83,79,.1)'};color:${cl==='tg'?'var(--green)':'#e87878'}">${cl==='tg'?'↙':'↗'}</div>
-          <div class="act-body"><div class="act-name">${d}</div><div class="act-sub">${t}</div></div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="sbadge ${cl}" style="font-size:11px;padding:2px 8px">${a}</div><div class="act-time">${tm}</div></div>
+          <div class="act-body"><div class="act-name">${escapeHtml(d)}</div><div class="act-sub">${escapeHtml(t)}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px"><div class="sbadge ${escapeHtml(cl)}" style="font-size:11px;padding:2px 8px">${escapeHtml(a)}</div><div class="act-time">${escapeHtml(tm)}</div></div>
         </div>`).join('')}
     </div>
   </div>`;
@@ -973,20 +1230,20 @@ function buildProfile(){
 
 /* ─── MESSAGES ─── */
 function buildMessages(){
-  const msgs = [
+  const msgs = dataList('messages', [
     {av:'AM',avC:'#4a7ec0',name:'Amina Hassan',prev:'Hi, can you share the revised ground floor plan?',time:'2h ago',unread:true},
     {av:'JK',avC:'#e8a04a',name:'Joseph Kamau',prev:'Plastering is 80% complete, sending photos now',time:'4h ago',unread:true},
     {av:'TF',avC:'#c9952a',name:'Tuff Foam Hardware',prev:'Your bulk order is ready for collection',time:'Yesterday',unread:false},
     {av:'MH',avC:'#3a8c3a',name:'Mineco House Support',prev:'Your plan download link has been sent',time:'2d ago',unread:false},
-  ];
+  ]);
   return `<div class="dash-section" id="ds-messages">
     <div class="dh"><div><div class="dhtitle">Messages</div><div class="dhsub">In-platform communication</div></div><button class="dhbtn">+ New Message</button></div>
     <div class="card">
       ${msgs.map(m=>`<div class="msg-item">
-        <div class="msg-av" style="background:${m.avC}22;color:${m.avC}">${m.av}</div>
+        <div class="msg-av" style="background:${escapeHtml(m.avC)}22;color:${escapeHtml(m.avC)}">${escapeHtml(m.av)}</div>
         <div class="msg-body">
-          <div class="msg-hdr"><div class="msg-name">${m.name}</div><div class="msg-time">${m.time}</div></div>
-          <div class="msg-prev">${m.prev}</div>
+          <div class="msg-hdr"><div class="msg-name">${escapeHtml(m.name)}</div><div class="msg-time">${escapeHtml(m.time)}</div></div>
+          <div class="msg-prev">${escapeHtml(m.prev)}</div>
         </div>
         ${m.unread?'<div class="msg-unread"></div>':''}
       </div>`).join('')}
@@ -996,12 +1253,13 @@ function buildMessages(){
 
 /* ─── PROFESSIONAL: PROJECTS ─── */
 function buildProfProjects(){
+  const projects = dataList('projects', [{n:'Amina Hassan - 4BR Villa Karen',s:'Design Phase',p:35,c:'#4a7ec0'},{n:'CDF - Kahawa Market Renovation',s:'Working Drawings',p:70,c:'#3a8c3a'},{n:'Kiambu County - Staff Quarters',s:'Approvals',p:55,c:'#c9952a'}]);
   return `<div class="dash-section" id="ds-projects">
     <div class="dh"><div><div class="dhtitle">Projects</div><div class="dhsub">Manage all your active client projects</div></div><button class="dhbtn">+ New Project</button></div>
-    ${[{n:'Amina Hassan — 4BR Villa Karen',s:'Design Phase',p:35,c:'#4a7ec0'},{n:'CDF — Kahawa Market Renovation',s:'Working Drawings',p:70,c:'#3a8c3a'},{n:'Kiambu County — Staff Quarters',s:'Approvals',p:55,c:'#c9952a'}].map(p=>`
+    ${projects.map(p=>`
     <div class="card" style="margin-bottom:10px">
-      <div class="card-hdr"><div class="card-title">${p.n}</div><span class="tag ${p.p>60?'tg':'tb'}">${p.s}</span></div>
-      <div class="prog-wrap"><div class="prog-label"><span>Progress</span><span>${p.p}%</span></div><div class="prog"><div class="progb" style="width:${p.p}%;background:${p.c}"></div></div></div>
+      <div class="card-hdr"><div class="card-title">${escapeHtml(p.n)}</div><span class="tag ${p.p>60?'tg':'tb'}">${escapeHtml(p.s)}</span></div>
+      <div class="prog-wrap"><div class="prog-label"><span>Progress</span><span>${escapeHtml(p.p)}%</span></div><div class="prog"><div class="progb" style="width:${Number(p.p)||0}%;background:${escapeHtml(p.c||'#4a7ec0')}"></div></div></div>
       <div style="display:flex;gap:6px;margin-top:10px"><button class="jbtn p">Open Project</button><button class="jbtn s">Upload Files</button><button class="jbtn s">Client View</button></div>
     </div>`).join('')}
   </div>`;
@@ -1051,13 +1309,14 @@ function buildCloudStorage(){
 
 /* ─── JOB BOARD (professional & artisan) ─── */
 function buildJobBoard(){
+  const jobs = dataList('jobs', [{t:'4BR Executive Villa - Architect needed',l:'Karen, Nairobi',b:'KES 55,000 full project',d:'Client seeking BORAQS registered architect for new build. Plans + working drawings required.',tags:['Residential','BORAQS','Urgent']},{t:'Commercial Office Fit-out - QS required',l:'Westlands, Nairobi',b:'KES 12,000 BOQ',d:'Detailed BOQ and cost plan for 4-floor office fit-out. Must be IQSK registered.',tags:['Commercial','QS','BOQ']},{t:'Structural Engineer - Foundation design',l:'Thika Road, Kiambu',b:'KES 18,000 consultancy',d:'5-storey residential block. Structural calculations, BBS and approval drawings.',tags:['Structural','EBK']}]);
   return `<div class="dash-section" id="ds-jobs">
     <div class="dh"><div><div class="dhtitle">Job Board</div><div class="dhsub">Project opportunities matching your profile</div></div></div>
-    ${[{t:'4BR Executive Villa — Architect needed',l:'Karen, Nairobi',b:'KES 55,000 full project',d:'Client seeking BORAQS registered architect for new build. Plans + working drawings required.',tags:['Residential','BORAQS','Urgent']},{t:'Commercial Office Fit-out — QS required',l:'Westlands, Nairobi',b:'KES 12,000 BOQ',d:'Detailed BOQ and cost plan for 4-floor office fit-out. Must be IQSK registered.',tags:['Commercial','QS','BOQ']},{t:'Structural Engineer — Foundation design',l:'Thika Road, Kiambu',b:'KES 18,000 consultancy',d:'5-storey residential block. Structural calculations, BBS and approval drawings.',tags:['Structural','EBK']}].map(j=>`
+    ${jobs.map(j=>`
     <div class="job-card">
-      <div class="jc-top"><div class="jc-title">${j.t}</div><div class="jc-budget">${j.b}</div></div>
-      <div class="jc-meta"><span class="jc-loc">📍 ${j.l}</span>${j.tags.map(t=>`<span class="tag tb" style="font-size:9px">${t}</span>`).join('')}</div>
-      <div class="jc-desc">${j.d}</div>
+      <div class="jc-top"><div class="jc-title">${escapeHtml(j.t)}</div><div class="jc-budget">${escapeHtml(j.b)}</div></div>
+      <div class="jc-meta"><span class="jc-loc">📍 ${j.l}</span>${(j.tags||[]).map(t=>`<span class="tag tb" style="font-size:9px">${escapeHtml(t)}</span>`).join('')}</div>
+      <div class="jc-desc">${escapeHtml(j.d)}</div>
       <div class="jc-actions"><button class="jbtn p">Apply Now</button><button class="jbtn s">Save</button><button class="jbtn s">Share</button></div>
     </div>`).join('')}
   </div>`;
@@ -1065,12 +1324,13 @@ function buildJobBoard(){
 
 /* ─── CLIENT: PROJECTS ─── */
 function buildClientProjects(){
+  const projects = dataList('projects', [{n:'3BR Bungalow - Ruiru',s:'Foundation Phase',p:45,bud:'KES 3.8M'},{n:'Perimeter Wall - Thika plot',s:'Completed',p:100,bud:'KES 280K'}]);
   return `<div class="dash-section" id="ds-projects">
     <div class="dh"><div><div class="dhtitle">My Projects</div><div class="dhsub">Track all your construction projects</div></div><button class="dhbtn">+ New Project</button></div>
-    ${[{n:'3BR Bungalow — Ruiru',s:'Foundation Phase',p:45,bud:'KES 3.8M'},{n:'Perimeter Wall — Thika plot',s:'Completed',p:100,bud:'KES 280K'}].map(p=>`
+    ${projects.map(p=>`
     <div class="card" style="margin-bottom:10px">
-      <div class="card-hdr"><div class="card-title">${p.n}</div><div style="display:flex;gap:6px"><span class="tag ${p.p===100?'tg':'to'}">${p.s}</span><span style="font-size:11px;color:var(--green)">${p.bud}</span></div></div>
-      <div class="prog-wrap"><div class="prog-label"><span>Construction progress</span><span>${p.p}%</span></div><div class="prog"><div class="progb" style="width:${p.p}%;background:${p.p===100?'var(--green)':'var(--orange)'}"></div></div></div>
+      <div class="card-hdr"><div class="card-title">${escapeHtml(p.n)}</div><div style="display:flex;gap:6px"><span class="tag ${p.p===100?'tg':'to'}">${escapeHtml(p.s)}</span><span style="font-size:11px;color:var(--green)">${escapeHtml(p.bud)}</span></div></div>
+      <div class="prog-wrap"><div class="prog-label"><span>Construction progress</span><span>${escapeHtml(p.p)}%</span></div><div class="prog"><div class="progb" style="width:${Number(p.p)||0}%;background:${p.p===100?'var(--green)':'var(--orange)'}"></div></div></div>
       <div style="display:flex;gap:6px;margin-top:10px"><button class="jbtn p">View Details</button><button class="jbtn s">Pay Milestone</button></div>
     </div>`).join('')}
   </div>`;
@@ -1119,13 +1379,14 @@ function buildFindArtisans(){
 
 /* ─── ARTISAN: JOBS ─── */
 function buildArtisanJobs(){
+  const jobs = dataList('jobs', [{t:'Mason needed - Foundation work',l:'Thika Road, Kiambu',b:'KES 1,600/day - 14 days',d:'Residential 3BR bungalow. Foundation and slab work. BRC fixing and concrete included. Start ASAP.',tags:['Mason','Foundation','Urgent']},{t:'Plastering - New apartment block',l:'Ruiru, Kiambu',b:'KES 1,500/day - 21 days',d:'Internal and external plastering for 8-unit apartment block. Scaffolding provided.',tags:['Mason','Plastering']},{t:'Tiles fixing - Kitchen and bathrooms',l:'Westlands, Nairobi',b:'KES 1,800/day - 5 days',d:'High-end Italian tiles. Experience with large-format porcelain required.',tags:['Tiles','Premium']}]);
   return `<div class="dash-section" id="ds-jobs">
     <div class="dh"><div><div class="dhtitle">Available Jobs</div><div class="dhsub">Jobs matching your skills and location</div></div></div>
-    ${[{t:'Mason needed — Foundation work',l:'Thika Road, Kiambu',b:'KES 1,600/day · 14 days',d:'Residential 3BR bungalow. Foundation and slab work. BRC fixing and concrete included. Start ASAP.',tags:['Mason','Foundation','Urgent']},{t:'Plastering — New apartment block',l:'Ruiru, Kiambu',b:'KES 1,500/day · 21 days',d:'Internal and external plastering for 8-unit apartment block. Scaffolding provided.',tags:['Mason','Plastering']},{t:'Tiles fixing — Kitchen and bathrooms',l:'Westlands, Nairobi',b:'KES 1,800/day · 5 days',d:'High-end Italian tiles. Experience with large-format porcelain required.',tags:['Tiles','Premium']}].map(j=>`
+    ${jobs.map(j=>`
     <div class="job-card">
-      <div class="jc-top"><div class="jc-title">${j.t}</div><div class="jc-budget">${j.b}</div></div>
-      <div class="jc-meta"><span class="jc-loc">📍 ${j.l}</span>${j.tags.map(t=>`<span class="tag ${t==='Urgent'?'tr':'to'}" style="font-size:9px">${t}</span>`).join('')}</div>
-      <div class="jc-desc">${j.d}</div>
+      <div class="jc-top"><div class="jc-title">${escapeHtml(j.t)}</div><div class="jc-budget">${escapeHtml(j.b)}</div></div>
+      <div class="jc-meta"><span class="jc-loc">📍 ${j.l}</span>${(j.tags||[]).map(t=>`<span class="tag ${t==='Urgent'?'tr':'to'}" style="font-size:9px">${escapeHtml(t)}</span>`).join('')}</div>
+      <div class="jc-desc">${escapeHtml(j.d)}</div>
       <div class="jc-actions"><button class="jbtn p">Express Interest</button><button class="jbtn s">Save</button></div>
     </div>`).join('')}
   </div>`;
@@ -1198,7 +1459,7 @@ function buildTenders(){
     <div class="dh"><div><div class="dhtitle">Tenders</div><div class="dhsub">Government &amp; private project opportunities</div></div></div>
     ${[{t:'Kiambu County — Road drainage works',b:'KES 8.5M',dead:'15 Jun 2025',tags:['Government','Infrastructure','PPRA']},{t:'NSSF Housing — 50 units Ruiru',b:'KES 45M',dead:'30 Jun 2025',tags:['Residential','NCA Class A']},{t:'Westlands Office Block — MEP Works',b:'KES 12M',dead:'20 Jun 2025',tags:['Commercial','MEP']}].map(j=>`
     <div class="job-card">
-      <div class="jc-top"><div class="jc-title">${j.t}</div><div class="jc-budget">${j.b}</div></div>
+      <div class="jc-top"><div class="jc-title">${escapeHtml(j.t)}</div><div class="jc-budget">${escapeHtml(j.b)}</div></div>
       <div class="jc-meta"><span class="jc-loc">📅 Deadline: ${j.dead}</span>${j.tags.map(t=>`<span class="tag tgold" style="font-size:9px">${t}</span>`).join('')}</div>
       <div class="jc-actions"><button class="jbtn p">Download Tender Docs</button><button class="jbtn s">Save</button></div>
     </div>`).join('')}
