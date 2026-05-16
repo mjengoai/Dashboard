@@ -1553,5 +1553,72 @@ function buildSettings(){
 ══════════════════════════════════════ */
 goTo('landing');
 </script>
+  <script>
+// 1. Core Page Navigation
+function goTo(pageId) {
+  // Hide all main pages
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  
+  // Show the requested page
+  const target = document.getElementById('page-' + pageId);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo(0, 0); // Reset scroll to top
+  }
+}
+
+// 2. Auth Flow Handler
+function showAuth(role) {
+  // Map roles to their specific UI elements
+  const roleInfo = {
+    'client': { title: 'CLIENT', ico: '🏠' },
+    'professional': { title: 'PROFESSIONAL', ico: '📐' },
+    'artisan': { title: 'ARTISAN', ico: '⚒️' },
+    'vendor': { title: 'VENDOR', ico: '🏪' },
+    'contractor': { title: 'CONTRACTOR', ico: '🏗️' },
+    'materials': { title: 'MATERIALS', ico: '🧱' }
+  };
+
+  const info = roleInfo[role] || roleInfo['client'];
+  
+  // Update the Auth page UI with selected role
+  document.getElementById('auth-cat').innerText = info.title;
+  document.getElementById('auth-ico').innerText = info.ico;
+  
+  goTo('auth');
+}
+
+// 3. Dashboard Sidebar Navigation
+function switchDash(sectionId, btnElement) {
+  // Update sidebar button styling
+  document.querySelectorAll('.sbi').forEach(btn => btn.classList.remove('on'));
+  btnElement.classList.add('on');
+  
+  // Update dashboard content sections
+  document.querySelectorAll('.dash-section').forEach(section => section.classList.remove('on'));
+  const targetSection = document.getElementById('dash-' + sectionId);
+  if (targetSection) {
+    targetSection.classList.add('on');
+  }
+}
+
+// 4. Temporary Bypass (To enter the dashboard now)
+function mockNextStep() {
+  goTo('dash');
+}
+
+// 5. Auth Tab Switcher (Sign Up vs Sign In)
+function switchAuthTab(btn, mode) {
+  document.querySelectorAll('.atab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  
+  const title = document.getElementById('auth-title');
+  if (mode === 'signup') {
+    title.innerText = 'Create your account';
+  } else {
+    title.innerText = 'Welcome back';
+  }
+}
+</script>
 </body>
 </html>
