@@ -336,10 +336,127 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:11px 2
 /* Scrollbar */
 ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:3px;}
+
+/* ── TOAST NOTIFICATIONS ── */
+#toast-wrap{position:fixed;top:70px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--bg3);border:1px solid var(--bdr2);border-radius:10px;padding:11px 16px;font-size:12px;color:var(--text);box-shadow:var(--shad);display:flex;align-items:center;gap:9px;min-width:240px;max-width:320px;animation:toastIn .25s ease;pointer-events:auto;}
+.toast.success{border-color:rgba(126,200,126,.3);background:rgba(126,200,126,.08);}
+.toast.error{border-color:rgba(217,83,79,.3);background:rgba(217,83,79,.08);}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease;}
+.modal-box{background:var(--bg2);border:1px solid var(--bdr2);border-radius:18px;padding:28px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--shad);}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.modal-title{font-family:var(--serif);font-size:19px;color:var(--text);}
+.modal-close{width:30px;height:30px;border-radius:50%;background:var(--bg4);border:1px solid var(--bdr);cursor:pointer;color:var(--muted);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.modal-close:hover{color:var(--text);background:var(--bg3);}
+.modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+.mbtn{padding:8px 20px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--sans);border:1px solid;transition:all .15s;}
+.mbtn.pr{background:var(--gd);border-color:var(--gd);color:#fff;}
+.mbtn.pr:hover{background:#2d7a2d;}
+.mbtn.sc{background:transparent;border-color:var(--bdr2);color:var(--muted);}
+.mbtn.sc:hover{color:var(--text);background:var(--bg3);}
+.mbtn.dn{background:rgba(217,83,79,.15);border-color:rgba(217,83,79,.3);color:#e87878;}
+
+/* ── MESSAGE PANEL ── */
+.msg-panel{position:fixed;right:0;top:53px;bottom:0;width:360px;background:var(--bg2);border-left:1px solid var(--bdr);z-index:400;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);}
+.msg-panel.open{transform:translateX(0);}
+.mp-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--bdr);}
+.mp-title{font-size:14px;font-weight:700;color:var(--text);}
+.mp-close{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;}
+.mp-threads{flex:1;overflow-y:auto;}
+.mp-thread{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .14s;}
+.mp-thread:hover,.mp-thread.active{background:var(--bg3);}
+.mp-av{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.mp-body{flex:1;min-width:0;}
+.mp-name{font-size:12px;font-weight:600;color:var(--text);}
+.mp-prev{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mp-time{font-size:10px;color:var(--muted2);}
+.mp-unread{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px;}
+.mp-chat{display:flex;flex-direction:column;flex:1;}
+.mp-chat-hdr{padding:12px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;}
+.mp-chat-back{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;}
+.mp-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.chat-bubble{max-width:78%;padding:9px 13px;border-radius:12px;font-size:12px;line-height:1.55;}
+.chat-bubble.them{background:var(--bg3);color:var(--text);border-radius:4px 12px 12px 12px;align-self:flex-start;}
+.chat-bubble.me{background:var(--gd);color:#fff;border-radius:12px 12px 4px 12px;align-self:flex-end;}
+.chat-time{font-size:9px;color:var(--muted2);margin-top:3px;}
+.mp-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--bdr);}
+.mp-input{flex:1;height:38px;background:var(--bg3);border:1px solid var(--bdr);border-radius:10px;padding:0 12px;font-size:12px;color:var(--text);outline:none;font-family:var(--sans);}
+.mp-send{width:38px;height:38px;background:var(--gd);border:none;border-radius:10px;color:#fff;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ── NOTIFICATION PANEL ── */
+.notif-panel{position:fixed;right:0;top:53px;width:320px;background:var(--bg2);border-left:1px solid var(--bdr);border-bottom:1px solid var(--bdr);border-radius:0 0 0 14px;z-index:450;box-shadow:var(--shad);max-height:420px;overflow-y:auto;animation:fadeIn .2s ease;}
+.np-hdr{padding:13px 16px;border-bottom:1px solid var(--bdr);font-size:12px;font-weight:700;color:var(--text);display:flex;justify-content:space-between;align-items:center;}
+.np-item{padding:11px 14px;border-bottom:1px solid var(--bdr);cursor:pointer;transition:background .14s;}
+.np-item:hover{background:var(--bg3);}
+.np-item:last-child{border-bottom:none;}
+.np-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.np-sub{font-size:11px;color:var(--muted);}
+.np-time{font-size:10px;color:var(--muted2);margin-top:3px;}
+.np-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;margin-top:4px;}
+
+/* Nav notification bell */
+.nbell{position:relative;background:none;border:none;cursor:pointer;color:var(--muted);font-size:17px;padding:5px;border-radius:7px;transition:all .15s;display:flex;align-items:center;}
+.nbell:hover{color:var(--text);background:rgba(255,255,255,.06);}
+.nbell-dot{position:absolute;top:3px;right:3px;width:7px;height:7px;border-radius:50%;background:#d9534f;border:1px solid var(--bg);}
+
+/* File upload feedback */
+.upload-zone.dragover{border-color:var(--green);background:rgba(126,200,126,.06);}
+.file-upload-item{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px;}
+.fu-name{flex:1;font-size:12px;color:var(--text);}
+.fu-prog{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;margin-top:4px;}
+.fu-progb{height:100%;background:var(--green);border-radius:2px;transition:width .4s;}
+
+/* Active search filter chips */
+.filter-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid var(--bdr2);color:var(--muted);background:var(--bg3);transition:all .15s;}
+.filter-chip:hover,.filter-chip.on{background:var(--gdim);border-color:rgba(126,200,126,.3);color:var(--green);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-ic{font-size:36px;margin-bottom:10px;}
+.empty-txt{font-size:13px;}
 </style>
 </head>
 <body>
 <div id="mj-dash-recaptcha" style="display:none;"></div>
+<!-- TOAST CONTAINER -->
+<div id="toast-wrap"></div>
+<!-- MODAL CONTAINER -->
+<div id="modal-root"></div>
+<!-- MESSAGE PANEL -->
+<div class="msg-panel" id="msg-panel">
+  <div id="mp-threads-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <div class="mp-hdr">
+      <div class="mp-title">Messages</div>
+      <button class="mp-close" onclick="closeMessages()">&#x2715;</button>
+    </div>
+    <div class="mp-threads" id="mp-threads"></div>
+    <div style="padding:10px 14px;border-top:1px solid var(--bdr)">
+      <button class="dhbtn" style="width:100%" onclick="showToast('New message composer coming soon','&#x2139;&#xFE0F;')">+ New Message</button>
+    </div>
+  </div>
+  <div id="mp-chat-view" class="mp-chat" style="display:none;">
+    <div class="mp-chat-hdr">
+      <button class="mp-chat-back" onclick="backToThreads()">&larr;</button>
+      <div class="mp-av" id="mp-chat-av" style="background:rgba(74,126,192,.2);color:#7ab4f0">AM</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text)" id="mp-chat-name">Amina Hassan</div>
+        <div style="font-size:10px;color:var(--green)">&#9679; Online</div>
+      </div>
+      <button class="mp-close" style="margin-left:auto" onclick="closeMessages()">&#x2715;</button>
+    </div>
+    <div class="mp-chat-msgs" id="mp-chat-msgs"></div>
+    <div class="mp-input-row">
+      <input class="mp-input" id="mp-chat-input" placeholder="Type a message&hellip;" onkeydown="if(event.key==='Enter')sendChatMsg()"/>
+      <button class="mp-send" onclick="sendChatMsg()">&#x27A4;</button>
+    </div>
+  </div>
+</div>
+<!-- NOTIFICATION PANEL -->
+<div id="notif-panel" class="notif-panel" style="display:none;"></div>
 
 <!-- ═══════════════════ NAV ═══════════════════ -->
 <nav>
@@ -354,6 +471,9 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:11px 2
     <span class="ntxt">MjengoAI</span>
   </div>
   <div class="nright" id="nav-right">
+    <button id="nav-bell" class="nbell" onclick="toggleNotifPanel()" style="display:none" title="Notifications">
+      &#128276;<div class="nbell-dot" id="bell-dot"></div>
+    </button>
     <button class="nlink" onclick="goTo('landing')">Browse</button>
     <button class="nlink" onclick="showAuth('client')">Sign in</button>
     <button class="ncta" onclick="showAuth('client')">Join Free</button>
@@ -1010,6 +1130,8 @@ function launchDashboard(){
   // Nav bar update
   document.getElementById('nav-right').innerHTML = `
     <span style="font-size:12px;color:var(--muted);padding:0 8px">${currentUser.name}</span>
+    <button class="nbell" onclick="toggleNotifPanel()" title="Notifications" style="position:relative">🔔<div class="nbell-dot"></div></button>
+    <button class="nlink" onclick="openMessages()" title="Messages">💬</button>
     <button class="ncta" style="background:var(--bg3);border:1px solid var(--bdr2);color:var(--text)" onclick="goTo('landing');updateNav()">Sign Out</button>`;
 
   buildDashContent();
@@ -1429,6 +1551,530 @@ function buildContractorProjects(){
     </div>`).join('')}
   </div>`;
 }
+
+/* ══════════════════════════════════════
+   TOAST SYSTEM
+══════════════════════════════════════ */
+function showToast(msg, icon='✅', type='success', dur=3200){
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span style="font-size:15px">${icon}</span><span style="flex:1">${msg}</span><span style="cursor:pointer;color:var(--muted);font-size:13px" onclick="this.parentElement.remove()">✕</span>`;
+  wrap.appendChild(t);
+  setTimeout(()=>{ t.style.animation='toastOut .25s ease forwards'; setTimeout(()=>t.remove(),260); }, dur);
+}
+
+/* ══════════════════════════════════════
+   MODAL SYSTEM
+══════════════════════════════════════ */
+function openModal(html){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="modal-overlay" id="modal-ov" onclick="e=>{if(e.target.id==='modal-ov')closeModal()}">${html}</div>`;
+  root.querySelector('.modal-overlay').addEventListener('click', e=>{ if(e.target.classList.contains('modal-overlay')) closeModal(); });
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+/* ── Payment modal ── */
+function openPayModal(name, amount){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Pay Milestone</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="fgroup"><label class="flabel">Recipient</label><input class="finput" value="${name||'Contractor'}" readonly/></div>
+    <div class="fgroup"><label class="flabel">Amount (MJT)</label><input class="finput" id="pay-amt" value="${amount||240}" type="number" min="1"/></div>
+    <div class="fgroup"><label class="flabel">Milestone Description</label><input class="finput" id="pay-desc" placeholder="e.g. Foundation completion"/></div>
+    <div style="background:var(--gdim);border:1px solid rgba(126,200,126,.2);border-radius:9px;padding:11px 14px;font-size:11px;color:var(--green);margin-bottom:4px">
+      🔒 Funds held in NCBA Loop escrow — released only when you confirm completion
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="confirmPay()">Confirm Payment</button>
+    </div>
+  </div>`);
+}
+function confirmPay(){
+  const amt = document.getElementById('pay-amt').value;
+  closeModal();
+  showToast(`${amt} MJT sent to escrow — awaiting milestone confirmation`,'💰');
+}
+
+/* ── Hire modal ── */
+function openHireModal(name, role, rate){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Hire ${name||'Artisan'}</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px">${role||''} · ${rate||'KES 1,600/day'}</div>
+    <div class="fgroup"><label class="flabel">Job Description</label><textarea class="finput" id="hire-desc" style="height:80px;padding:10px;resize:vertical" placeholder="Describe the work needed…"></textarea></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Start Date</label><input class="finput" id="hire-start" type="date"/></div>
+      <div class="fgroup"><label class="flabel">Duration (days)</label><input class="finput" id="hire-days" type="number" min="1" placeholder="e.g. 14"/></div>
+    </div>
+    <div class="fgroup"><label class="flabel">Location</label><input class="finput" placeholder="e.g. Karen, Nairobi"/></div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Hire request sent to ${name} — you\'ll be notified when they accept','🤝')">Send Request</button>
+    </div>
+  </div>`);
+}
+
+/* ── Apply job modal ── */
+function openApplyModal(title){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Apply for Job</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:14px">${title||'Job Opportunity'}</div>
+    <div class="fgroup"><label class="flabel">Cover Note</label><textarea class="finput" style="height:90px;padding:10px;resize:vertical" placeholder="Why are you the best fit for this job?"></textarea></div>
+    <div class="fgroup"><label class="flabel">Your Rate / Quote</label><input class="finput" placeholder="e.g. KES 1,600/day or KES 45,000 fixed"/></div>
+    <div class="fgroup"><label class="flabel">Availability</label><input class="finput" type="date"/></div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Application submitted successfully!','📋')">Submit Application</button>
+    </div>
+  </div>`);
+}
+
+/* ── Upload files modal ── */
+function openUploadModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Upload Files</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="upload-zone" id="modal-dropzone" onclick="document.getElementById('modal-file-input').click()">
+      <div class="upload-zone-ic">☁️</div>
+      <div class="upload-zone-t">Drop files here or click to browse</div>
+      <div class="upload-zone-s">DWG, PDF, DOCX, XLSX, JPG, PNG · Max 500 MB</div>
+    </div>
+    <input type="file" id="modal-file-input" multiple style="display:none" onchange="handleFileSelect(this)"/>
+    <div id="upload-list"></div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Files uploaded successfully','☁️')">Upload</button>
+    </div>
+  </div>`);
+}
+function handleFileSelect(input){
+  const list = document.getElementById('upload-list');
+  if(!list) return;
+  list.innerHTML = [...input.files].map(f=>`
+    <div class="file-upload-item">
+      <span style="font-size:16px">${f.name.endsWith('.pdf')?'📄':f.name.match(/\.(jpg|jpeg|png)$/i)?'🖼':'📁'}</span>
+      <div style="flex:1"><div class="fu-name">${f.name}</div>
+      <div class="fu-prog"><div class="fu-progb" id="fp-${f.name.replace(/[^a-z0-9]/gi,'_')}" style="width:0%"></div></div></div>
+      <span style="font-size:10px;color:var(--muted)">${(f.size/1024/1024).toFixed(1)} MB</span>
+    </div>`).join('');
+  // Simulate upload progress
+  [...input.files].forEach(f=>{
+    const id = 'fp-'+f.name.replace(/[^a-z0-9]/gi,'_');
+    let pct = 0;
+    const iv = setInterval(()=>{
+      pct += Math.random()*25;
+      if(pct>=100){pct=100;clearInterval(iv);}
+      const el = document.getElementById(id);
+      if(el) el.style.width = pct+'%';
+    },200);
+  });
+}
+
+/* ── New project modal ── */
+function openNewProjectModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">New Project</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="fgroup"><label class="flabel">Project Name</label><input class="finput" placeholder="e.g. 3BR Bungalow – Thika Road"/></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">County</label><input class="finput" placeholder="e.g. Kiambu"/></div>
+      <div class="fgroup"><label class="flabel">Town</label><input class="finput" placeholder="e.g. Ruiru"/></div>
+    </div>
+    <div class="fgroup"><label class="flabel">Budget (KES)</label><input class="finput" type="number" placeholder="e.g. 3800000"/></div>
+    <div class="fgroup"><label class="flabel">Project Type</label>
+      <select class="finput"><option>Residential – New Build</option><option>Commercial</option><option>Renovation</option><option>Perimeter Wall</option><option>Infrastructure</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Project created successfully!','🏗️')">Create Project</button>
+    </div>
+  </div>`);
+}
+
+/* ── Topup wallet modal ── */
+function openTopupModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Top Up MJT Wallet</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px">1 MJT = KES 100 · Backed by NCBA Loop</div>
+    <div class="fgroup"><label class="flabel">Amount (KES)</label><input class="finput" id="topup-kes" type="number" placeholder="e.g. 5000" oninput="document.getElementById('topup-mjt').textContent=(this.value/100).toFixed(0)+' MJT'"/></div>
+    <div style="background:var(--bg3);border-radius:9px;padding:12px;text-align:center;margin-bottom:14px">
+      You will receive: <strong id="topup-mjt" style="color:var(--green)">— MJT</strong>
+    </div>
+    <div class="fgroup"><label class="flabel">Pay via</label>
+      <div style="display:flex;gap:8px">
+        <button class="filter-chip on" id="pay-mpesa" onclick="selectPayMethod('mpesa')">📱 M-Pesa</button>
+        <button class="filter-chip" id="pay-ncba" onclick="selectPayMethod('ncba')">🏦 NCBA Mobile</button>
+        <button class="filter-chip" id="pay-card" onclick="selectPayMethod('card')">💳 Card</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Top-up initiated via M-Pesa — check your phone','📱')">Proceed to Pay</button>
+    </div>
+  </div>`);
+}
+function selectPayMethod(m){
+  ['mpesa','ncba','card'].forEach(id=>document.getElementById('pay-'+id)?.classList.remove('on'));
+  document.getElementById('pay-'+m)?.classList.add('on');
+}
+
+/* ── Tender download modal ── */
+function openTenderModal(title, budget){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Tender Documents</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">${title||'Tender'}</div>
+    <div style="font-size:12px;color:var(--green);margin-bottom:16px">${budget||''}</div>
+    <div style="display:flex;flex-direction:column;gap:7px">
+      ${['Tender Notice.pdf','Bill of Quantities.xlsx','Technical Specifications.pdf','Drawing Package.zip','Bid Form.docx'].map(f=>`
+      <div class="file-item" style="background:var(--bg3);border-radius:8px" onclick="showToast('Downloading ${f}','📄')">
+        <span class="file-ic">📄</span>
+        <div class="file-name">${f}</div>
+        <button class="jbtn s" style="font-size:10px;padding:3px 9px">↓ Download</button>
+      </div>`).join('')}
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Close</button>
+      <button class="mbtn pr" onclick="closeModal();openApplyModal('${title||'Tender'}')">Apply for Tender</button>
+    </div>
+  </div>`);
+}
+
+/* ── Profile photo modal ── */
+function openPhotoModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Upload Profile Photo</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="upload-zone" onclick="showToast('Photo upload ready — choose your file','📷')">
+      <div class="upload-zone-ic">📷</div>
+      <div class="upload-zone-t">Click to upload a photo</div>
+      <div class="upload-zone-s">JPG or PNG · Max 5 MB · Square crop recommended</div>
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Profile photo updated!','✅')">Save Photo</button>
+    </div>
+  </div>`);
+}
+
+/* ── Add product modal ── */
+function openAddProductModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Add Product</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="fgroup"><label class="flabel">Product Name</label><input class="finput" placeholder="e.g. Portland Cement 50kg"/></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Price (KES)</label><input class="finput" type="number" placeholder="720"/></div>
+      <div class="fgroup"><label class="flabel">Unit</label><input class="finput" placeholder="bag, m², sheet…"/></div>
+    </div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Stock</label><input class="finput" type="number" placeholder="500"/></div>
+      <div class="fgroup"><label class="flabel">Category</label>
+        <select class="finput"><option>Cement</option><option>Steel</option><option>Roofing</option><option>Blocks</option><option>Timber</option><option>Tiles</option><option>Sanitary</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn pr" onclick="closeModal();showToast('Product listed successfully!','📦')">Add Product</button>
+    </div>
+  </div>`);
+}
+
+/* ── Delete account confirm ── */
+function openDeleteModal(){
+  openModal(`<div class="modal-box">
+    <div class="modal-hdr"><div class="modal-title">Delete Account</div><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6">This will permanently delete your MjengoAI account, profile, and all project data. This action cannot be undone.</div>
+    <div class="fgroup"><label class="flabel">Type DELETE to confirm</label><input class="finput" id="del-confirm" placeholder="DELETE"/></div>
+    <div class="modal-footer">
+      <button class="mbtn sc" onclick="closeModal()">Cancel</button>
+      <button class="mbtn dn" onclick="if(document.getElementById('del-confirm').value==='DELETE'){closeModal();showToast('Account deleted','🗑️','error');}else{showToast('Type DELETE to confirm','⚠️','error');}">Delete Account</button>
+    </div>
+  </div>`);
+}
+
+/* ══════════════════════════════════════
+   MESSAGE PANEL
+══════════════════════════════════════ */
+const THREADS = [
+  {id:1, av:'AM', avC:'#4a7ec0', name:'Amina Hassan', prev:'Hi, can you share the revised ground floor plan?', time:'2h ago', unread:true,
+   msgs:[{me:false,text:'Hi, can you share the revised ground floor plan?',t:'2h ago'},{me:true,text:'Sure Amina, uploading it now. Rev C includes the updated kitchen layout.',t:'2h ago'},{me:false,text:'Perfect, thank you! When will the electrical drawings be ready?',t:'1h ago'}]},
+  {id:2, av:'JK', avC:'#e8a04a', name:'Joseph Kamau', prev:'Plastering is 80% complete, sending photos now', time:'4h ago', unread:true,
+   msgs:[{me:false,text:'Plastering is 80% complete, sending photos now',t:'4h ago'},{me:true,text:'Great work Joseph! Please ensure the bathroom walls are done before Friday.',t:'3h ago'}]},
+  {id:3, av:'TF', avC:'#c9952a', name:'Tuff Foam Hardware', prev:'Your bulk order is ready for collection', time:'Yesterday', unread:false,
+   msgs:[{me:true,text:'Hi, I placed an order for 50 bags cement, is it ready?',t:'Yesterday'},{me:false,text:'Your bulk order is ready for collection',t:'Yesterday'}]},
+  {id:4, av:'MH', avC:'#3a8c3a', name:'Mineco House Support', prev:'Your plan download link has been sent', time:'2d ago', unread:false,
+   msgs:[{me:true,text:'I need the full drawing set for plan MH-R-3021',t:'2d ago'},{me:false,text:'Your plan download link has been sent to your email',t:'2d ago'}]},
+];
+let activeThread = null;
+
+function openMessages(threadId){
+  const panel = document.getElementById('msg-panel');
+  panel.classList.add('open');
+  renderThreadList();
+  if(threadId) openThread(THREADS.find(t=>t.id===threadId) || THREADS[0]);
+}
+
+function closeMessages(){
+  document.getElementById('msg-panel').classList.remove('open');
+}
+
+function renderThreadList(){
+  const container = document.getElementById('mp-threads');
+  container.innerHTML = THREADS.map(t=>`
+    <div class="mp-thread ${activeThread?.id===t.id?'active':''}" onclick="openThread(THREADS.find(x=>x.id===${t.id}))">
+      <div class="mp-av" style="background:${t.avC}22;color:${t.avC}">${t.av}</div>
+      <div class="mp-body">
+        <div style="display:flex;justify-content:space-between"><div class="mp-name">${t.name}</div><div class="mp-time">${t.time}</div></div>
+        <div class="mp-prev">${t.prev}</div>
+      </div>
+      ${t.unread?'<div class="mp-unread"></div>':''}
+    </div>`).join('');
+}
+
+function openThread(thread){
+  if(!thread) return;
+  activeThread = thread;
+  thread.unread = false;
+  document.getElementById('mp-threads-view').style.display='none';
+  document.getElementById('mp-chat-view').style.display='flex';
+  document.getElementById('mp-chat-name').textContent = thread.name;
+  document.getElementById('mp-chat-av').textContent = thread.av;
+  document.getElementById('mp-chat-av').style.background = thread.avC+'22';
+  document.getElementById('mp-chat-av').style.color = thread.avC;
+  const msgs = document.getElementById('mp-chat-msgs');
+  msgs.innerHTML = thread.msgs.map(m=>`
+    <div>
+      <div class="chat-bubble ${m.me?'me':'them'}">${m.text}</div>
+      <div class="chat-time" style="${m.me?'text-align:right':''}">${m.t}</div>
+    </div>`).join('');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function backToThreads(){
+  document.getElementById('mp-threads-view').style.display='flex';
+  document.getElementById('mp-chat-view').style.display='none';
+  activeThread = null;
+  renderThreadList();
+}
+
+function sendChatMsg(){
+  const inp = document.getElementById('mp-chat-input');
+  const text = inp.value.trim();
+  if(!text||!activeThread) return;
+  activeThread.msgs.push({me:true, text, t:'Just now'});
+  activeThread.prev = text;
+  inp.value='';
+  const msgs = document.getElementById('mp-chat-msgs');
+  msgs.innerHTML += `<div><div class="chat-bubble me">${text}</div><div class="chat-time" style="text-align:right">Just now</div></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  // Simulate reply
+  setTimeout(()=>{
+    const replies = ['Got it, will update shortly.','Thanks for the message!','I\'ll get back to you soon.','Noted, working on it.'];
+    const reply = replies[Math.floor(Math.random()*replies.length)];
+    activeThread.msgs.push({me:false,text:reply,t:'Just now'});
+    msgs.innerHTML += `<div><div class="chat-bubble them">${reply}</div><div class="chat-time">Just now</div></div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 1500);
+}
+
+/* ══════════════════════════════════════
+   NOTIFICATION PANEL
+══════════════════════════════════════ */
+const NOTIFICATIONS = [
+  {icon:'📨',title:'New project request',sub:'Amina Hassan — 4BR Villa, Karen',time:'1h ago',unread:true},
+  {icon:'💰',title:'Milestone payment received',sub:'1,200 MJT — Foundation phase',time:'3h ago',unread:true},
+  {icon:'⭐',title:'New 5★ review',sub:'From James Ochieng — excellent work!',time:'Yesterday',unread:false},
+  {icon:'📋',title:'New tender alert',sub:'Kiambu County — Road drainage KES 8.5M',time:'Yesterday',unread:false},
+  {icon:'🏗️',title:'Site progress update',sub:'Ruiru 4BR Villa — 60% complete',time:'2d ago',unread:false},
+];
+
+function toggleNotifPanel(){
+  const p = document.getElementById('notif-panel');
+  if(p.style.display==='none'||!p.style.display){
+    p.style.display='block';
+    p.innerHTML=`<div class="np-hdr"><span>Notifications</span><button style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--green)" onclick="markAllRead()">Mark all read</button></div>`
+      +NOTIFICATIONS.map(n=>`<div class="np-item" onclick="closeNotifPanel();showToast('${n.title}','${n.icon}')">
+        <div style="display:flex;gap:9px;align-items:flex-start">
+          <span style="font-size:18px">${n.icon}</span>
+          <div style="flex:1"><div class="np-title">${n.title}</div><div class="np-sub">${n.sub}</div><div class="np-time">${n.time}</div></div>
+          ${n.unread?'<div class="np-dot"></div>':''}
+        </div></div>`).join('');
+  } else {
+    p.style.display='none';
+  }
+}
+function closeNotifPanel(){ document.getElementById('notif-panel').style.display='none'; }
+function markAllRead(){
+  NOTIFICATIONS.forEach(n=>n.unread=false);
+  document.getElementById('bell-dot').style.display='none';
+  document.getElementById('notif-panel').querySelectorAll('.np-dot').forEach(d=>d.remove());
+}
+
+document.addEventListener('click', e=>{
+  const panel = document.getElementById('notif-panel');
+  if(panel && !panel.contains(e.target) && !e.target.closest('#nav-bell')) closeNotifPanel();
+});
+
+/* ══════════════════════════════════════
+   PATCH launchDashboard — show bell
+══════════════════════════════════════ */
+const _origLaunch = launchDashboard;
+launchDashboard = function(){
+  _origLaunch();
+  const bell = document.getElementById('nav-bell');
+  if(bell) bell.style.display='flex';
+};
+
+/* ══════════════════════════════════════
+   PATCH updateNav — hide bell on signout
+══════════════════════════════════════ */
+const _origUpdateNav = updateNav;
+updateNav = function(){
+  _origUpdateNav();
+  const bell = document.getElementById('nav-bell');
+  if(bell) bell.style.display='none';
+};
+
+/* ══════════════════════════════════════
+   PATCH buildDashContent — inject active buttons
+══════════════════════════════════════ */
+const _origBuild = buildDashContent;
+buildDashContent = function(){
+  _origBuild();
+  patchDashButtons();
+};
+
+function patchDashButtons(){
+  const main = document.getElementById('dash-main');
+  if(!main) return;
+
+  // + New Project button
+  main.querySelectorAll('.dhbtn').forEach(btn=>{
+    const txt = btn.textContent.trim();
+    if(txt==='+ New Project') btn.onclick=()=>openNewProjectModal();
+    if(txt==='+ Upload Files') btn.onclick=()=>openUploadModal();
+    if(txt==='+ Add Product') btn.onclick=()=>openAddProductModal();
+    if(txt==='+ New Message') btn.onclick=()=>openMessages();
+  });
+
+  // Upload zone
+  main.querySelectorAll('.upload-zone').forEach(z=>z.onclick=()=>openUploadModal());
+
+  // Profile photo button
+  main.querySelectorAll('.pav-btn').forEach(b=>{ if(b.textContent.includes('Photo')) b.onclick=()=>openPhotoModal(); });
+
+  // Save profile button
+  main.querySelectorAll('.dhbtn').forEach(b=>{ if(b.textContent==='Save Changes') b.onclick=()=>showToast('Profile saved successfully!','✅'); });
+
+  // Wallet buttons
+  main.querySelectorAll('.wc-btn').forEach(btn=>{
+    const txt = btn.textContent.trim();
+    if(txt.includes('Top Up')) btn.onclick=()=>openTopupModal();
+    if(txt.includes('Pay Pro')) btn.onclick=()=>openPayModal('Professional','240');
+    if(txt.includes('Withdraw')) btn.onclick=()=>showToast('Withdrawal request submitted — funds in 1-2 business days','🏦');
+    if(txt.includes('History')) btn.onclick=()=>showToast('Full transaction history loading…','📋');
+  });
+
+  // Messages section open chat
+  main.querySelectorAll('.msg-item').forEach((item,i)=>item.onclick=()=>openMessages(THREADS[i]?.id||1));
+
+  // Job board apply buttons
+  main.querySelectorAll('.jbtn.p').forEach(btn=>{
+    const txt = btn.textContent.trim();
+    const card = btn.closest('.job-card');
+    const title = card?.querySelector('.jc-title')?.textContent||'Job';
+    if(txt==='Apply Now'||txt==='Express Interest') btn.onclick=()=>openApplyModal(title);
+    if(txt==='Hire Now') btn.onclick=()=>openHireModal(card?.querySelector('.jc-title')?.textContent||'Artisan','Vetted Artisan','KES 1,600/day');
+    if(txt==='View Details') btn.onclick=()=>showToast('Project detail view coming soon','🏗️');
+    if(txt==='Pay Milestone') btn.onclick=()=>openPayModal('Contractor','480');
+    if(txt==='Open Project') btn.onclick=()=>showToast('Project workspace opening…','📁');
+    if(txt==='Manage') btn.onclick=()=>showToast('Project management panel coming soon','🏗️');
+    if(txt==='Accept Order') btn.onclick=()=>{ btn.textContent='Processing…'; setTimeout(()=>{ btn.textContent='Accepted ✓'; btn.style.background='var(--green)'; showToast('Order accepted!','✅'); },800); };
+    if(txt==='Download Tender Docs') btn.onclick=()=>openTenderModal(title, card?.querySelector('.jc-budget')?.textContent);
+  });
+
+  main.querySelectorAll('.jbtn.s').forEach(btn=>{
+    const txt = btn.textContent.trim();
+    if(txt==='Message'||txt==='Message Client') btn.onclick=()=>openMessages(1);
+    if(txt==='Save') btn.onclick=()=>showToast('Saved to your list','🔖');
+    if(txt==='Share') btn.onclick=()=>{ navigator.clipboard?.writeText(window.location.href).catch(()=>{}); showToast('Link copied to clipboard','🔗'); };
+    if(txt==='Upload Files') btn.onclick=()=>openUploadModal();
+    if(txt==='Site Reports') btn.onclick=()=>showToast('Site reports loading…','📊');
+    if(txt==='Request Payment') btn.onclick=()=>openPayModal('Client','1200');
+    if(txt==='View Profile') btn.onclick=()=>showToast('Public profile view coming soon','👤');
+    if(txt==='Client View') btn.onclick=()=>showToast('Client portal link copied','🔗');
+    if(txt==='Edit'){btn.onclick=()=>showToast('Edit product coming soon','✏️');}
+    if(txt==='Pause'){btn.onclick=e=>{ const p=e.target; p.textContent=p.textContent==='Pause'?'Resume':'Pause'; showToast(p.textContent==='Pause'?'Listing resumed':'Listing paused','📦'); };}
+  });
+
+  // Plan cards view button
+  main.querySelectorAll('.plan-card').forEach(card=>{
+    card.onclick=()=>{
+      const title=card.querySelector('.plan-title')?.textContent||'Plan';
+      const price=card.querySelector('.plan-price')?.textContent||'';
+      showToast(`${title} — ${price}. Download link in your email 📐`,'🏠');
+    };
+  });
+
+  // Folder rows
+  main.querySelectorAll('.folder-row').forEach(row=>{
+    row.onclick=()=>showToast('Opening folder…','📁');
+  });
+
+  // File items
+  main.querySelectorAll('.file-item').forEach(row=>{
+    row.onclick=()=>showToast('Downloading file…','📄');
+  });
+
+  // Settings toggles
+  main.querySelectorAll('.card .act-item div[style*="border-radius:11px"]').forEach(tog=>{
+    tog.onclick=function(){
+      const thumb=this.querySelector('div');
+      const isOn=thumb.style.left!=='2px';
+      thumb.style.left=isOn?'2px':'20px';
+      this.style.background=isOn?'var(--bg4)':'var(--gd)';
+      showToast(isOn?'Notification disabled':'Notification enabled',isOn?'🔕':'🔔');
+    };
+  });
+
+  // Settings account buttons
+  main.querySelectorAll('.jbtn.s').forEach(btn=>{
+    if(btn.textContent.includes('Change Password')) btn.onclick=()=>showToast('Password change email sent to your address','🔒');
+    if(btn.textContent.includes('Linked Devices')) btn.onclick=()=>showToast('Device management coming soon','📱');
+    if(btn.textContent.includes('Delete Account')) btn.onclick=()=>openDeleteModal();
+  });
+
+  // Price manager inputs
+  main.querySelectorAll('#ds-prices .finput').forEach(inp=>{
+    inp.onchange=()=>showToast('Price updated — live on platform in 5 minutes','📈');
+  });
+
+  // Bulk update button
+  main.querySelectorAll('.dhbtn').forEach(btn=>{
+    if(btn.textContent==='Bulk Update') btn.onclick=()=>openUploadModal();
+  });
+
+  // Filter chips in Find Artisans
+  main.querySelectorAll('.tag.tb[style*="cursor:pointer"]').forEach(chip=>{
+    chip.onclick=function(){
+      main.querySelectorAll('.tag.tb[style*="cursor:pointer"]').forEach(c=>c.classList.remove('on'));
+      this.classList.add('on');
+      showToast(`Filtering by: ${this.textContent}`,'🔍');
+    };
+  });
+
+  // Artisan search input
+  const srch = main.querySelector('#ds-find .finput');
+  if(srch){
+    srch.onkeydown=e=>{ if(e.key==='Enter') showToast(`Searching for "${srch.value}"…`,'🔍'); };
+  }
+}
+
+/* ══════════════════════════════════════
+   SIDEBAR MESSAGES CLICK — open panel
+══════════════════════════════════════ */
+const _origShow = showDashSection;
+showDashSection = function(id, el){
+  _origShow(id, el);
+  if(id==='messages') openMessages();
+  setTimeout(patchDashButtons, 60);
+};
 
 /* ─── SETTINGS ─── */
 function buildSettings(){
