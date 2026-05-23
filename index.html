@@ -1063,7 +1063,7 @@ async function verifyOTP(){
         const {doc,setDoc} = firebaseModules;
         const id = (currentUser.phone||currentUser.uid||'guest').replace(/[^a-zA-Z0-9_-]/g,'_');
         setDoc(doc(firebaseDb,'users',id),{name:currentUser.name,phone:currentUser.phone||'',role:currentUser.role,uid:currentUser.uid||'',joinedAt:new Date().toISOString()},{merge:true}).catch(e=>console.warn('[MjengoAI]',e.message));
-        setDoc(doc(firebaseDb,'members',id),{name:currentUser.name,phone:currentUser.phone||'',role:currentUser.role,subCategory:currentUser.sub||'',active:false,verified:false,joinedAt:new Date().toISOString(),rating:0,reviews:0},{merge:true}).catch(e=>console.warn('[MjengoAI]',e.message));
+        setDoc(doc(firebaseDb,'members',id),{name:currentUser.name,phone:currentUser.phone||'',role:currentUser.role,subCategory:currentUser.sub||'',active:true,verified:false,joinedAt:new Date().toISOString(),rating:0,reviews:0},{merge:true}).catch(e=>console.warn('[MjengoAI]',e.message));
       }catch(fe){console.warn('[MjengoAI] Firestore:',fe.message);}
     }
     goStep(3);
